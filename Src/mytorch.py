@@ -179,8 +179,8 @@ def testTrainNN(trainingSet, testSet):
 
     #if finalScore < 150:
         #torch.save(bestModel.state_dict(), "xModels/" + str(int(finalScore))+".plt")    
-    torch.save(bestModel.state_dict(), "model.pth")
-    print("Saved PyTorch Model State to model.pth")    
+    torch.save(bestModel.state_dict(), "modeltest.pth")
+    print("Saved PyTorch Model State to modeltest.pth")    
     
 
 def trainModel():

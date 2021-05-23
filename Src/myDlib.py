@@ -18,6 +18,8 @@ from torchvision import models
 
 
 
+
+
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print(device)
 
@@ -114,7 +116,7 @@ user32 = ctypes.windll.user32
 screensize = ( user32.GetSystemMetrics(0)    ,    user32.GetSystemMetrics(1) )
 
 
-camera = 1
+camera = 0
 
 def nothing(x):
     # We need a callback for the createTrackbar function.
@@ -346,6 +348,9 @@ def main():
     
     data_mode = False
     ai_mode = False
+    test_mode = False
+    test_displayed = True
+    
     continuous_capture_mode = False
     capdelay = 0
     
@@ -356,6 +361,9 @@ def main():
     per2=0
     per3=0
     error = 0
+    
+    error_listx = []
+    error_listy = []
     
     while(True): 
         # Read the parameters from the GUI
@@ -433,11 +441,15 @@ def main():
             cv2.imshow('eye', roi_gray_l)
             if (ai_mode):
                 eyeControl(roi_gray_l, model)
-            else:
+            
+            if (test_mode):
                 [xread, yread] = eyeControl(roi_gray_l, model, False)
                 totalSample = totalSample +1
                 xerr = -ahk.mouse_position[0] + xread
                 yerr = -ahk.mouse_position[1] + yread
+                error_listx.append(float(xerr))
+                error_listy.append(float(yerr))
+                
                 error = (xerr**2 + yerr**2)**0.5
                 ser = ""
                 if error < 100:
@@ -449,7 +461,26 @@ def main():
                 else:
                     per3 = per3 + 1
                     ser = ":>200"
-                print("Error = {}, {}".format(error, ser))
+                print("Error = {}, {}".format(error, ser))         
+            else:
+                if not test_displayed: 
+                    print("displayscore")
+                    print("Score: \n000 - 100 :{:.2f}\n100 - 200 :{:.2f}\n    > 200 :{:.2f}\n".format(per1/totalSample, per2/totalSample, per3/totalSample))
+                    #print(error_listx)
+                    test_displayed = True
+                    plt.scatter(error_listx, error_listy)
+                    plt.xlabel('x error')
+                    plt.ylabel('y error')
+                    plt.title('Scatter Plot of Error')                    
+                    
+                    plt.show(block=True)
+                    
+                    error_listx = []
+                    error_listy = []                    
+                    
+                    
+                    
+                
                 
             ###ret, roi_T_l = cv2.threshold(roi_blur_l, size2, 255, cv2.THRESH_BINARY)
             #detect_blob(roi_T_l , roi_color_l)
@@ -512,6 +543,15 @@ def main():
                 print("stop continuous_capture_mode mode")
             starttime = time.perf_counter()
             continuous_capture_mode = not continuous_capture_mode    
+            
+        if cv2.waitKey(1) & 0xFF == ord('t'):
+            if not data_mode:
+                test_displayed = False
+                
+                print("start test mode")
+            else:
+                print("stop test mode")            
+            test_mode = not test_mode            
 
         if cv2.waitKey(1) & 0xFF == ord('n'):
             if not data_mode:
@@ -539,7 +579,6 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
     
-    print("Score: \n000 - 100 :{:.2f}\n100 - 200 :{:.2f}\n    > 200 :{:.2f}\n".format(per1/totalSample, per2/totalSample, per3/totalSample))
     #end of main
 
 
