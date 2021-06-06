@@ -116,7 +116,7 @@ user32 = ctypes.windll.user32
 screensize = ( user32.GetSystemMetrics(0)    ,    user32.GetSystemMetrics(1) )
 
 
-camera = 0
+camera = 1
 
 def nothing(x):
     # We need a callback for the createTrackbar function.
@@ -128,6 +128,7 @@ def convert_to_gray_scale(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
 
+## not used
 def blobParam(thr=(0,255,10), 
               col=(False, 200), 
               area=(False, 30, 2000), 
@@ -168,7 +169,7 @@ def blobParam(thr=(0,255,10),
         blobdetector = cv2.SimpleBlobDetector_create(params) 
         return blobdetector
 
-#Unused
+## not used
 def houghCircle(img):
     circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, param1=param1,
                                 param2=param2, minRadius=minRadius, maxRadius=maxRadius)    
@@ -183,7 +184,11 @@ def houghCircle(img):
             cv2.circle(img,(i[0],i[1]),2,(0,0,255),3)    
 
 
+
 def setDim(img, scale_percent):
+    """
+    rescales image
+    """
     width = int(img.shape[1] * scale_percent / 100)
     height = int(img.shape[0] * scale_percent / 100)
     return (width, height)     
@@ -196,12 +201,15 @@ def setDim(img, scale_percent):
 
 ###ret, roi_T_l = cv2.threshold(roi_blur_l, size2, 255, cv2.THRESH_BINARY)
 
+
+##not used
 def otsuThreshold(img):
     #blur = cv2.GaussianBlur(img,(5,5),0)
     ret, th = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return ret, th
     
 
+##not used
 def detect_pupil(roi_color, param1, param2, minRadius, maxRadius, input1, input2):
     dim = setDim(roi_color, 200)
     roi_color = cv2.resize(roi_color, dim)          
@@ -248,6 +256,8 @@ def detect_pupil(roi_color, param1, param2, minRadius, maxRadius, input1, input2
     
     #cv2.imshow('frame1', frame)
     
+    
+## The following code is for averaging the guesses of the CNN model with machine learning. 
 circx = [0]
 circy = [0]
 circI = 0
@@ -272,7 +282,11 @@ def circBuff(xxx, yyy):
     return [avex, avey]
     
     
+    
 def eyeControl(roi_gray_l, model, control=True):
+    """
+    Uses the trained CNN model to move the mouse or display the guess of where the gaze is.
+    """
     nnim = torch.tensor([[roi_gray_l]]).to(dtype=torch.float,device=device)
     #print(type(roi_gray_l))
     output = model(nnim)
@@ -287,6 +301,8 @@ def eyeControl(roi_gray_l, model, control=True):
         print(outx, outy)
         return (outx, outy)
 
+
+##unused
 def detect_blob(frame, blobdetector, color=(0,0,255)):
     #gray = convert_to_gray_scale(frame)
     #gray=  cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -306,7 +322,7 @@ yel_c = (0, 255, 255)
 
 
 
-
+##following code is for running the code with parameters from the command shell. 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--shape-predictor", required=True, help="path to facial landmark predictor")
@@ -367,6 +383,7 @@ def main():
     
     while(True): 
         # Read the parameters from the GUI
+        # Mostly unused but it was used during the development of the eyetracker. 
         param1 = cv2.getTrackbarPos('Canny Threshold', 'Parameters')
         param2 = cv2.getTrackbarPos('Accumulator Threshold', 'Parameters')
         minRadius = cv2.getTrackbarPos('Min Radius', 'Parameters')
@@ -438,7 +455,10 @@ def main():
             #detect_pupil(roi_color_l, param1, param2, minRadius, maxRadius, input1, input2)
             cv2.rectangle(frame2, (leftMin[0], leftMin[1], leftMax[0] - leftMin[0] ,leftMax[1] - leftMin[1]), cya_c,2)  # Draw a blue box around each face.
             '''machine learning part'''
-            cv2.imshow('eye', roi_gray_l)
+            cv2.imshow('eye', roi_gray_l) #shows the eye box (40 by 40) 
+            
+            
+            ##A really bad state machine. I didn't intend to make a state machine at first and just added states as I needed. 
             if (ai_mode):
                 eyeControl(roi_gray_l, model)
             
@@ -583,7 +603,8 @@ def main():
 
 
 
-#start of code kinda
+##start of code
+    # In the end, none of the trackbars were used. 
 
 cv2.namedWindow('Parameters')
 cv2.createTrackbar('Canny Threshold', 'Parameters', 1, 500, nothing)
